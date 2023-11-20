@@ -20,7 +20,7 @@ The workflow involves several stages, from preparing the dataset and generative 
 
 ### Step 3: Classifier Model Selection
 - **Choose a Classifier**: Typically, a convolutional neural network (CNN) is suitable for image classification.
-- **Architecture Selection**: Consider architectures like ResNet or VGG, potentially using pre-trained models for fine-tuning.
+- **Architecture Selection**: Consider architectures like ResNet or VGG, potentially using pre-trained models for fine-tuning (Resnet50)
 
 ### Step 4: Data Augmentation and Training
 - **Integrate Augmented Images**: Develop a strategy to intelligently mix original and generated images (Informed-Mixup Method). Start with equal proportion, this proportion will be tuned like hyperparameters. 
