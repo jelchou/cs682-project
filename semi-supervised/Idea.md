@@ -48,3 +48,24 @@ The workflow involves several stages, from preparing the dataset and generative 
 
 ## Conclusion
 This semi-supervised approach aims to enhance the performance of image classification models, especially in scenarios with limited labeled data, by generating realistic and diverse training examples through GANs and ensuring their quality and relevance through feature similarity checks.
+
+
+## look into
+- feature similarity package
+- https://pypi.org/project/image-similarity-measures/
+- https://medium.com/scrapehero/exploring-image-similarity-approaches-in-python-b8ca0a3ed5a3
+- https://www.geeksforgeeks.org/measure-similarity-between-images-using-python-opencv/
+- https://pytorch.org/docs/stable/generated/torch.nn.CosineSimilarity.html
+- https://www.kaggle.com/code/gauravduttakiit/generative-adversarial-networks-gans
+- https://arxiv.org/abs/2202.08937#:~:text=Importantly%2C%20for%20most%20of%20the,of%20discriminative%20computer%20vision%20models
+
+## work to-do
+
+1. Create the Generative Model to generate dataset 
+ -- look into pre-trained model / make a model from scratch
+ -- input - CUB dataset / flower dataset
+2. Data augmentation part - create the tuning of combination of dataset
+ -- overfit a model with smaller training data, take the feedback and find the best policy. 
+3. resnet part is ready
+
+## Writeup - 
