@@ -10,9 +10,9 @@ from pathlib import Path
 
 
 # Configuration and Paths
-dataset_path = Path('./dataset/CUB_200_2011')
+dataset_path = Path('/work/pi_hongyu_umass_edu/zonghai/mahbuba_medvidqa/semi_supervised/meta_learning/dataset/CUB_200_2011')
 batch_size = 64
-num_epochs = 5
+num_epochs = 10
 num_classes = 200  # Set the correct number of classes based on your dataset
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -46,10 +46,10 @@ def main():
     model, train_losses, val_losses, train_accuracy, val_accuracy = train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=num_epochs, device=device)
 
     # Save the Trained Model
-    save_model(model, f'./model_weights/{model_name}.pth')
+    save_model(model, f'/work/pi_hongyu_umass_edu/zonghai/mahbuba_medvidqa/semi_supervised/meta_learning/model_weights/{model_name}.pth')
 
     # Load the Model (for evaluation)
-    model = load_model(model, f'./model_weights/{model_name}.pth', device)
+    model = load_model(model, f'/work/pi_hongyu_umass_edu/zonghai/mahbuba_medvidqa/semi_supervised/meta_learning/model_weights/{model_name}.pth', device)
 
     # Evaluate the Model
     model.eval()
@@ -70,6 +70,7 @@ def main():
     #top confused pairs -10
     top_rows, top_cols, top_values = get_top_confused_classes(cm, num_pairs=10)
     top_confused_pairs = list(zip(top_rows, top_cols, top_values))
+    print(top_confused_pairs)
 
 
 if __name__ == '__main__':
