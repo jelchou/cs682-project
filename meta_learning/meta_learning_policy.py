@@ -39,14 +39,16 @@ def main():
 
     # Phase 1: Policy Generation
     # Define the space of probabilities
-    space = [Real(0, 1, name='p1'), Real(0, 1, name='p2'), Real(0, 1, name='p3')]
+    space = [Real(0, 1, name='p1'), Real(0, 1, name='p2'), Real(0, 1, name='p3')
+             Real(0, 1, name='p4'),Real(0, 1, name='p5'),Real(0, 1, name='p6')]
 
     @use_named_args(space)
     def objective(**params):
         subset_size = 1000  # Adjust the subset size
         indices = np.random.choice(len(full_train_dataset), subset_size, replace=False)
         subset = Subset(full_train_dataset, indices)
-        subset.dataset.set_transform_probs({'crop': params['p1'], 'rotate': params['p2'], 'rgb': params['p3']})
+        subset.dataset.set_transform_probs({'crop': params['p1'], 'rotate': params['p2'], 'rgb': params['p3'],
+                                            'droput':params['p4'], 'blur':params['p5'], 'sigmoid':params['p6']})
         subset_loader = DataLoader(subset, batch_size=batch_size, shuffle=True, num_workers=2)
 
         # Train and evaluate the model

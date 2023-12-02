@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import random
 import albumentations as A
+from imgaug import augmenters as iaa
 
 def read_image(path):
     im = cv2.imread(str(path))
@@ -48,4 +49,41 @@ def apply_transform_rgb(x, sz=(224, 224)):
     ])
     augmented = transform(image=x)
     x = augmented['image']
+    return x
+
+def apply_transform_dropout(x, sz=(224, 224)):
+    """Applies dropout transformation."""
+    #Sample per image a value p from the range 0<=p<=0.2 and then drop p percent of all pixels in the image (i.e. convert them to black pixels)
+    transform = iaa.Sequential([
+      iaa.Dropout(p=(0, 0.2)),
+      iaa.Resize({"height": sz[0], "width": sz[1]})
+    ])
+    #passed the image x to the transform function
+    augmented = transform(image=x)
+    #the returned type is an nd arrays
+    x = augmented
+    return x
+
+
+def apply_transform_blur(x, sz=(224, 224)):
+    """Create an augmenter that always pools with a kernel size of 2 x 2"""
+    transform = iaa.Sequential([
+      iaa.imgcorruptlike.GaussianBlur(severity=2),
+      iaa.Resize({"height": sz[0], "width": sz[1]})
+    ])
+    #passed the image x to the transform function
+    x = transform(image=x)
+    #extracted the transformed image from the dictionary returned by the transformation using the key 'image'
+    return x
+
+def apply_transform_sigmoid(x, sz=(224, 224)):
+    """Applying the sigmoid contrast"""
+    transform = iaa.Sequential([
+      iaa.SigmoidContrast(gain=(3, 10), cutoff=(0.4, 0.6)),
+      iaa.Resize({"height": sz[0], "width": sz[1]}),
+      ])
+    #passed the image x to the transform function
+    augmented = transform(image=x)
+    #extracted the transformed image from the dictionary returned by the transformation using the key 'image'
+    x = augmented
     return x
