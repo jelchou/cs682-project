@@ -6,7 +6,7 @@ from pathlib import Path
 import random
 
 # Import transformations from image_transforms module
-from image_transforms import read_image, apply_transform_crop, apply_transform_rotation, apply_transform_rgb, normalize
+from image_transforms import read_image, apply_transform_crop, apply_transform_rotation, apply_transform_rgb, apply_transform_blur, apply_transform_dropout, apply_transform_sigmoid, normalize
 
 class CUBDataset(Dataset):
     def __init__(self, files_path, labels, train_test, image_name, train=True, transform_type=None):
@@ -17,7 +17,7 @@ class CUBDataset(Dataset):
             train_test (pd.DataFrame): Dataframe indicating train/test split.
             image_name (pd.DataFrame): Dataframe containing image file names.
             train (bool): Flag to indicate if the dataset is for training.
-            transform_type (str): Type of transformation ('crop', 'rotate', 'rgb', None).
+            transform_type (str): Type of transformation ('crop', 'rotate', 'rgb', 'sigmoid', 'blur', 'dropout', None).
         """
         self.files_path = files_path
         self.labels = labels
@@ -78,9 +78,14 @@ class CUBDataset(Dataset):
             x = apply_transform_rotation(x)
         elif transform_type == 'rgb':
             x = apply_transform_rgb(x)
-        # 'none' means no specific transformation
-        # Ensure all images are resized to the same size
-        x = cv2.resize(x, (224, 224))
+        elif transform_type == 'sigmoid':
+            x = apply_transform_sigmoid(x)
+        elif transform_type == 'blur':
+             x = apply_transform_blur(x)
+        elif transform_type == 'dropout':
+             x = apply_transform_dropout(x)
+        else:  # Default resize for no specific transformation
+            x = cv2.resize(x, (224, 224))
 
         # Normalize and adjust dimensions
         x = normalize(x)

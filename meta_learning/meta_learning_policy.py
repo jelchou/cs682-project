@@ -37,8 +37,10 @@ def main():
     full_train_dataset = CUBDataset(dataset_path, labels, train_test, images, train=True)
     val_loader = create_dataloader(dataset_path, labels, train_test, images, batch_size, train=False, transform_type=None, num_workers=2)
 
-    # Define the space of probabilities for Bayesian optimization
-    space = [Real(0, 1, name='p1'), Real(0, 1, name='p2'), Real(0, 1, name='p3')]
+    # Phase 1: Policy Generation
+    # Define the space of probabilities
+    space = [Real(0, 1, name='p1'), Real(0, 1, name='p2'), Real(0, 1, name='p3'),
+             Real(0, 1, name='p4'),Real(0, 1, name='p5'),Real(0, 1, name='p6')]
 
     @use_named_args(space)
     def objective(**params):
@@ -46,16 +48,13 @@ def main():
         subset_size = 1000  # Adjust the subset size
         indices = np.random.choice(len(full_train_dataset), subset_size, replace=False)
         subset = Subset(full_train_dataset, indices)
-
         # Print current probability values
         print(f"Current probabilities: {params}")
-
         # Apply the current augmentation policy to the subset
         current_augmentation_policy = {'crop': params['p1'], 'rotate': params['p2'], 'rgb': params['p3']}
-        # subset.dataset.apply_transform_policy(current_augmentation_policy)
-
         # Create a DataLoader for the subset
-        subset_loader = DataLoader(subset, batch_size=batch_size, shuffle=True, num_workers=2)
+        subset_loader = DataLoader(subset, batch_size=batch_size, shuffle=True, num_workers=2) 
+
 
         # Train and evaluate the model
         model = setup_resnet50(num_classes=num_classes, pretrained=True, freeze_layers=True)
