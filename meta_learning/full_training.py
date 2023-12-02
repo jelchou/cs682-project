@@ -12,9 +12,9 @@ from torch.utils.data import Subset, DataLoader
 
 
 # Configuration and Paths
-dataset_path = Path('./dataset/CUB_200_2011')
+dataset_path = Path('/work/pi_hongyu_umass_edu/zonghai/mahbuba_medvidqa/semi_supervised/meta_learning/dataset/CUB_200_2011')
 batch_size = 64
-num_epochs = 5
+num_epochs = 10
 num_classes = 200  # Set the correct number of classes based on your dataset
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -39,7 +39,7 @@ def main():
     full_train_dataset = CUBDataset(dataset_path, labels, train_test, images, train=True)
 
     # Apply the policy to the dataset
-    full_train_dataset.set_transform_probs(augmentation_policy)
+    # full_train_dataset.apply_transform_policy(augmentation_policy)
     full_train_loader = DataLoader(full_train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
 
     # Create DataLoaders
@@ -53,18 +53,19 @@ def main():
     optimizer = torch.optim.SGD(model.fc.parameters(), lr=0.001, momentum=0.9)
 
     # Train the Model
-    model, train_losses, val_losses, train_accuracy, val_accuracy = train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=num_epochs, device=device)
+    # model, train_losses, val_losses, train_accuracy, val_accuracy = train_model(model, full_train_loader, val_loader, criterion, optimizer, num_epochs=num_epochs, device=device)
+    model, train_losses, val_losses, train_accuracy, val_accuracy = train_model(model, full_train_dataset, augmentation_policy, full_train_loader, val_loader, criterion, optimizer, num_epochs=num_epochs, device=device)
 
     # Save the Trained Model
-    save_model(model, f'./model_weights/{model_name}.pth')
+    save_model(model, f'/work/pi_hongyu_umass_edu/zonghai/mahbuba_medvidqa/semi_supervised/meta_learning/model_weights/{model_name}.pth')
 
     # Load the Model (for evaluation)
-    model = load_model(model, f'./model_weights/{model_name}.pth', device)
+    model = load_model(model, f'/work/pi_hongyu_umass_edu/zonghai/mahbuba_medvidqa/semi_supervised/meta_learning/model_weights/{model_name}.pth', device)
 
     # Evaluate the Model
     model.eval()
 
-    top1 ,top5 = calc_accuracy(model, val_loader)
+    top1 ,top5 = calc_accuracy(model, val_loader,device)
     print("top1 avg", top1.avg)
     print("top5 avg",top5.avg)
 
