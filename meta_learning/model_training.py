@@ -5,12 +5,21 @@ from torchvision import models
 import numpy as np
 
 from utils import AverageMeter
+from dataset_loader import CUBDataset
 
-def train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=10, device='cuda'):
+def train_model(model, train_set,augment_policy, train_loader, val_loader, criterion, optimizer, num_epochs=10, device='cuda'):
     train_losses, val_losses = [], []
     train_accuracy, val_accuracy = [], []
 
     for epoch in range(num_epochs):
+        #dynamic transformation for each epoch
+        # different images will get different transformation in different epochs
+        # Apply the policy to the underlying CUBDataset of the subset
+        if hasattr(train_set, 'dataset'):
+            if isinstance(train_set.dataset, CUBDataset):
+                train_set.dataset.apply_transform_policy(augment_policy)
+
+        # dataset.apply_transform_policy(augment_policy)
         model.train()
         print('Training loop..')
         for inputs, labels in train_loader:
