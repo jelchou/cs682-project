@@ -16,9 +16,10 @@ import random
 import json
 
 # Configuration and Paths
-dataset_path = Path('./dataset/CUB_200_2011')
+# dataset_path = Path('./dataset/CUB_200_2011')
+dataset_path= Path('/work/pi_hongyu_umass_edu/zonghai/mahbuba_medvidqa/semi_supervised/meta_learning/dataset/CUB_200_2011')
 batch_size = 64
-num_epochs = 5
+# num_epochs = 5
 num_classes = 200  # Set the correct number of classes based on your dataset
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model_name = "resnet50_test"
@@ -34,19 +35,26 @@ def main():
 
     # Create a full training DataLoader
     full_train_dataset = CUBDataset(dataset_path, labels, train_test, images, train=True)
-    # full_train_loader = DataLoader(full_train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
     val_loader = create_dataloader(dataset_path, labels, train_test, images, batch_size, train=False, transform_type=None, num_workers=2)
 
-    # Phase 1: Policy Generation
-    # Define the space of probabilities
+    # Define the space of probabilities for Bayesian optimization
     space = [Real(0, 1, name='p1'), Real(0, 1, name='p2'), Real(0, 1, name='p3')]
 
     @use_named_args(space)
     def objective(**params):
+        # Choose a subset of the dataset for this iteration
         subset_size = 1000  # Adjust the subset size
         indices = np.random.choice(len(full_train_dataset), subset_size, replace=False)
         subset = Subset(full_train_dataset, indices)
-        subset.dataset.set_transform_probs({'crop': params['p1'], 'rotate': params['p2'], 'rgb': params['p3']})
+
+        # Print current probability values
+        print(f"Current probabilities: {params}")
+
+        # Apply the current augmentation policy to the subset
+        current_augmentation_policy = {'crop': params['p1'], 'rotate': params['p2'], 'rgb': params['p3']}
+        # subset.dataset.apply_transform_policy(current_augmentation_policy)
+
+        # Create a DataLoader for the subset
         subset_loader = DataLoader(subset, batch_size=batch_size, shuffle=True, num_workers=2)
 
         # Train and evaluate the model
@@ -54,15 +62,19 @@ def main():
         model.to(device)
         optimizer = torch.optim.SGD(model.fc.parameters(), lr=0.001, momentum=0.9)
         criterion = torch.nn.CrossEntropyLoss()
-        _, _, _, _, val_accuracy = train_model(model, subset_loader, val_loader, criterion, optimizer, num_epochs=1, device=device)
+
+        _, _, _, _, val_accuracy = train_model(model, subset, current_augmentation_policy, subset_loader, val_loader, criterion, optimizer, num_epochs=1, device=device)
+        # Print validation accuracy
+        print(f"Validation accuracy for this iteration: {val_accuracy[-1]}")
+
         return -val_accuracy[-1]  # Maximize the last epoch's validation accuracy
 
-    # Perform Bayesian optimization
+    # Perform Bayesian optimization to find the best augmentation policy
     result = gp_minimize(objective, space, n_calls=50)
     best_probabilities = result.x
     print("Best Probabilities:", best_probabilities)
 
-    # Save the policy to a JSON file
+    # Save the best augmentation policy to a JSON file
     augmentation_policy = {'crop': best_probabilities[0], 'rotate': best_probabilities[1], 'rgb': best_probabilities[2]}
     with open('augmentation_policy.json', 'w') as f:
         json.dump(augmentation_policy, f)
