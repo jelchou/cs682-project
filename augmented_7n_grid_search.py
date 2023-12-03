@@ -65,6 +65,7 @@ results_validation = {}
 best_val = -1 
 best_resnet = None 
 
+# We can randomly select a sub-sect of these models as well 
 
 
 for augs in grid_search:
