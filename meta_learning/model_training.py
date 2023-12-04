@@ -3,22 +3,34 @@ import torch.optim as optim
 import torch.nn as nn
 from torchvision import models
 import numpy as np
-
+from torch.utils.data import DataLoader
 from utils import AverageMeter
 from dataset_loader import CUBDataset
+from visualization import visualize_transformations
 
-def train_model(model, train_set,augment_policy, train_loader, val_loader, criterion, optimizer, num_epochs=10, device='cuda'):
+from torch.utils.data import ConcatDataset
+
+def train_model(model, original_dataset,transformed_dataset, val_loader, augment_policy, criterion, optimizer, save_path,num_epochs=10, batch_size=64, num_workers=2, device='cuda'):
     train_losses, val_losses = [], []
     train_accuracy, val_accuracy = [], []
 
-    for epoch in range(num_epochs):
-        #dynamic transformation for each epoch
-        # different images will get different transformation in different epochs
-        # Apply the policy to the underlying CUBDataset of the subset
-        if hasattr(train_set, 'dataset'):
-            if isinstance(train_set.dataset, CUBDataset):
-                train_set.dataset.apply_transform_policy(augment_policy)
+    print(f"original dataset{len(original_dataset)}, transformed_dataset{len(transformed_dataset)}")
 
+    for epoch in range(num_epochs):
+        # Apply the policy to the underlying CUBDataset of the subset
+        if hasattr(transformed_dataset, 'dataset') and isinstance(transformed_dataset.dataset, CUBDataset):
+            transformed_dataset.dataset.apply_transform_policy(augment_policy)
+            # Visualize or save transformations
+            visualize_transformations(transformed_dataset, epoch, ['crop', 'rotate', 'rgb', 'sigmoid', 'blur', 'dropout'],save_path)
+
+        
+        # Concatenate the original and transformed datasets
+        concatenated_dataset = ConcatDataset([original_dataset, transformed_dataset])
+
+        print(f"concatenated dataset len{len(concatenated_dataset)}")
+
+        # Recreate the DataLoader to reflect the updated dataset
+        train_loader = DataLoader(concatenated_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
         # dataset.apply_transform_policy(augment_policy)
         model.train()
         print('Training loop..')

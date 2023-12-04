@@ -6,7 +6,7 @@ from pathlib import Path
 import random
 
 # Import transformations from image_transforms module
-from image_transforms import read_image, apply_transform_crop, apply_transform_rotation, apply_transform_rgb, apply_transform_blur, apply_transform_dropout, apply_transform_sigmoid, normalize
+from image_transforms import *
 
 class CUBDataset(Dataset):
     def __init__(self, files_path, labels, train_test, image_name, train=True, transform_type=None):
@@ -17,7 +17,7 @@ class CUBDataset(Dataset):
             train_test (pd.DataFrame): Dataframe indicating train/test split.
             image_name (pd.DataFrame): Dataframe containing image file names.
             train (bool): Flag to indicate if the dataset is for training.
-            transform_type (str): Type of transformation ('crop', 'rotate', 'rgb', 'sigmoid', 'blur', 'dropout', None).
+            transform_type (str): Type of transformation ('crop', 'rotate', 'rgb', None).
         """
         self.files_path = files_path
         self.labels = labels
@@ -44,9 +44,12 @@ class CUBDataset(Dataset):
         num_crop = int(num_images * transform_policy['crop'])
         num_rotate = int(num_images * transform_policy['rotate'])
         num_rgb = int(num_images * transform_policy['rgb'])
+        num_sigmoid = int(num_images * transform_policy['sigmoid'])
+        num_blur = int(num_images * transform_policy['blur'])
+        num_dropout = int(num_images * transform_policy['dropout'])
 
         # Create a list of transformations for the entire dataset
-        transformations = ['crop'] * num_crop + ['rotate'] * num_rotate + ['rgb'] * num_rgb
+        transformations = ['crop'] * num_crop + ['rotate'] * num_rotate + ['rgb'] * num_rgb + ['sigmoid'] * num_sigmoid + ['blur'] * num_blur + ['dropout'] * num_dropout
         transformations += ['none'] * (num_images - len(transformations))  # Rest are 'none'
 
         # Shuffle the transformations
@@ -84,8 +87,11 @@ class CUBDataset(Dataset):
              x = apply_transform_blur(x)
         elif transform_type == 'dropout':
              x = apply_transform_dropout(x)
-        else:  # Default resize for no specific transformation
-            x = cv2.resize(x, (224, 224))
+        # else:  # Default resize for no specific transformation
+        #     x = cv2.resize(x, (224, 224))
+        # 'none' means no specific transformation
+        # Ensure all images are resized to the same size
+        x = cv2.resize(x, (224, 224))
 
         # Normalize and adjust dimensions
         x = normalize(x)
@@ -137,5 +143,4 @@ def create_dataloader(files_path, labels, train_test, image_name, batch_size=64,
         num_workers (int): Number of subprocesses to use for data loading.
     """
     dataset = CUBDataset(files_path, labels, train_test, image_name, train, transform_type)
-    print(len(dataset))
     return DataLoader(dataset, batch_size=batch_size, shuffle=train, num_workers=num_workers)
