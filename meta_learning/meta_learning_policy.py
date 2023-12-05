@@ -1,8 +1,6 @@
 from dataset_loader import create_dataloader, CUBDataset
 from model_setup import setup_resnet50
 from model_training import *
-from visualization import plot_training_results, plot_confusion_matrix, classification_report_details, get_top_confused_classes
-from utils import save_model, load_model
 
 from skopt import gp_minimize
 from skopt.space import Real

@@ -3,7 +3,7 @@ from dataset_loader import create_dataloader, CUBDataset
 from model_setup import setup_resnet50
 from model_training import *
 from visualization import *
-from utils import save_model, load_model
+from utils import *
 
 import torch
 import pandas as pd
@@ -14,7 +14,7 @@ from torch.utils.data import Subset, DataLoader
 # Configuration and Paths
 dataset_path = Path('/work/pi_hongyu_umass_edu/zonghai/mahbuba_medvidqa/semi_supervised/meta_learning/dataset/CUB_200_2011')
 batch_size = 32
-num_epochs = 15
+num_epochs = 20
 num_classes = 200  # Set the correct number of classes based on your dataset
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -29,18 +29,20 @@ images.columns = ["id", "name"]
 class_names = pd.read_csv(dataset_path/"classes.txt", header=None, sep=" ")
 class_names.columns = ["id", "class_name"]
 
-model_name = "resnet50_fulltraining_2n"
-save_path = Path('/work/pi_hongyu_umass_edu/zonghai/mahbuba_medvidqa/semi_supervised/meta_learning/visualizations/full_train_2n_sixaugmentations')
+model_name = "resnet50_fulltraining_2n_bsz32_epochs20"
+save_path = Path('/work/pi_hongyu_umass_edu/zonghai/mahbuba_medvidqa/semi_supervised/meta_learning/visualizations/fulltrain2n_bsz32_epochs20')
 
 def main():
 
     
     # Load the augmentation policy
-    with open('augmentation_policy.json', 'r') as f:
+    with open('augmentation_policy_10epochperminimization_2000.json', 'r') as f:
         augment_policy = json.load(f)
     # Create a full training DataLoader
     full_train_dataset = CUBDataset(dataset_path, labels, train_test, images, train=True)
     transformed_dataset = CUBDataset(dataset_path, labels, train_test, images, train=True)
+
+    print("Training with augmentation policy of 2000 subset")
 
     # Apply the policy to the dataset
     # full_train_dataset.apply_transform_policy(augmentation_policy)
@@ -93,6 +95,20 @@ def main():
     # top_confused_pairs = list(zip(top_rows, top_cols, top_values))
     # print(top_confused_pairs)
     plot_tsne(model, val_loader, device,model_name,save_path)
+
+    average_precision= precision_score(all_labels, all_preds,save_path)
+    print(f"Average Precision: {average_precision}")
+
+
+    # Per-class accuracy calculation
+    class_accuracies = cm.diagonal() / cm.sum(axis=1)
+    average_accuracy = np.mean(class_accuracies)
+
+    # Print per-class accuracy
+    for idx, acc in enumerate(class_accuracies):
+        print(f"Accuracy for class {idx}: {acc}")
+
+    print(f"Average Accuracy: {average_accuracy}")
 
 
 if __name__ == '__main__':

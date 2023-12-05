@@ -4,7 +4,7 @@ from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.manifold import TSNE
 import numpy as np
 import torch
-from pathlib import Path
+
 
 def plot_training_results(train_losses, val_losses, train_accuracy, val_accuracy,model_name,save_path):
     # save_path = Path('/work/pi_hongyu_umass_edu/zonghai/mahbuba_medvidqa/semi_supervised/meta_learning/visualizations')
@@ -168,3 +168,67 @@ def visualize_transformations(dataset, epoch, transformations,save_path):
 
     plt.savefig(f'{save_path}/epoch_{epoch}_transformations.png')
     plt.close()
+
+
+# def precision_score(true_labels, predictions,save_path):
+#     # Calculate precision per class and average precision
+#     precision_scores = precision_score(true_labels, predictions, average=None)
+#     average_precision = np.mean(precision_scores)
+#     # Plot histogram
+#     plt.bar(range(len(precision_scores)), precision_scores)
+#     plt.xlabel('Class')
+#     plt.ylabel('Precision')
+#     plt.title('Precision per Class')
+#     plt.savefig(f'{save_path}/Precision per class.png')
+#     plt.close()
+
+
+#     plt.hist(precision_scores)
+#     plt.xlabel('Precision')
+#     plt.ylabel('Number of Classes')
+#     plt.title('Precision of Validation data with Resnet50')
+#     plt.savefig(f'{save_path}/Precision of Validation data with Resnet50.png')
+
+#     return average_precision
+
+
+def visualize_transformations_flowers(dataset, epoch, transformations, save_path):
+    fig, axs = plt.subplots(1, len(transformations), figsize=(15, 3))
+    fig.suptitle(f'Epoch {epoch}: Sample Transformations')
+
+    # Check if dataset is a Subset and access the original dataset's attributes
+    if isinstance(dataset, torch.utils.data.Subset) and hasattr(dataset.dataset, 'image_transformations'):
+        image_transformations = dataset.dataset.image_transformations
+        dataset_to_use = dataset.dataset
+    else:
+        image_transformations = dataset.image_transformations
+        dataset_to_use = dataset
+
+    for i, trans_type in enumerate(transformations):
+        # Find the index of the first occurrence of each transformation
+        index = image_transformations.index(trans_type)
+        image, _ = dataset_to_use[index]
+
+        # Convert image to correct format for imshow
+        if isinstance(image, torch.Tensor):
+            # If image is a PyTorch tensor, convert to numpy and transpose
+            image = image.numpy().transpose((1, 2, 0))
+        elif isinstance(image, np.ndarray) and image.ndim == 3 and image.shape[0] == 3:
+            # If image is a numpy array in (C, H, W) format, transpose it
+            image = image.transpose((1, 2, 0))
+
+        # Normalize image for display
+        image = (image - image.min()) / (image.max() - image.min())
+
+        axs[i].imshow(image)
+        axs[i].set_title(trans_type)
+        axs[i].axis('off')
+
+    plt.savefig(f'{save_path}/epoch_{epoch}_transformations.png')
+    plt.close()
+
+
+
+
+# Usage Example:
+# visualize_transformations(transformed_dataset, 1, ['crop', 'rotate', 'rgb'], '/path/to/save')

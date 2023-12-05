@@ -2,12 +2,12 @@ from dataset_loader import create_dataloader
 from model_setup import setup_resnet50
 from model_training import *
 from visualization import *
-from utils import save_model, load_model
+from utils import *
 
 import torch
 import pandas as pd
 from pathlib import Path
-
+from sklearn.metrics import precision_score
 
 # Configuration and Paths
 dataset_path = Path('/work/pi_hongyu_umass_edu/zonghai/mahbuba_medvidqa/semi_supervised/meta_learning/dataset/CUB_200_2011')
@@ -26,9 +26,9 @@ images.columns = ["id", "name"]
 class_names = pd.read_csv(dataset_path/"classes.txt", header=None, sep=" ")
 class_names.columns = ["id", "class_name"]
 
-model_name = "resnet50_fulltraining_2n"
+model_name = "resnet50_none"
 # augment_policy = {"crop": 1}
-save_path = Path('/work/pi_hongyu_umass_edu/zonghai/mahbuba_medvidqa/semi_supervised/meta_learning/visualizations/full_train_2n_sixaugmentations')
+save_path = Path('/work/pi_hongyu_umass_edu/zonghai/mahbuba_medvidqa/semi_supervised/meta_learning/visualizations/none')
 
 def main():
 
@@ -85,6 +85,37 @@ def main():
     # top_confused_pairs = list(zip(top_rows, top_cols, top_values))
     # print(top_confused_pairs)
     plot_tsne(model, val_loader, device,model_name,save_path)
+
+
+    precision_scores = precision_score(all_labels,all_preds, average=None)
+    average_precision = np.mean(precision_scores)
+    # Plot histogram
+    plt.bar(range(len(precision_scores)), precision_scores)
+    plt.xlabel('Class')
+    plt.ylabel('Precision')
+    plt.title('Precision per Class')
+    plt.savefig(f'{save_path}/Precision per class.png')
+    plt.close()
+
+
+    plt.hist(precision_scores)
+    plt.xlabel('Precision')
+    plt.ylabel('Number of Classes')
+    plt.title('Precision of Validation data with Resnet50')
+    plt.savefig(f'{save_path}/Precision of Validation data with Resnet50.png')
+
+    print(f"Average Precision: {average_precision}")
+
+
+    # Per-class accuracy calculation
+    class_accuracies = cm.diagonal() / cm.sum(axis=1)
+    average_accuracy = np.mean(class_accuracies)
+
+    # Print per-class accuracy
+    for idx, acc in enumerate(class_accuracies):
+        print(f"Accuracy for class {idx}: {acc}")
+
+    print(f"Average Accuracy: {average_accuracy}")
 
 
 if __name__ == '__main__':
