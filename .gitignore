@@ -9,6 +9,8 @@ __pycache__/
 
 #image
 *.png 
+*.sh
+*.ipynb
 
 #model wts
 *.pth
